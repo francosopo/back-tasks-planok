@@ -7,3 +7,14 @@ db:
     POSTGRES_DB: tasks
   ports:
     - "5432:5432"
+
+web:
+  build: .
+  command: python manage.py runserver
+  volumes:
+    - .:/app
+  ports:
+    - "8000:8000"
+  depends_on:
+    - db 
+
