@@ -10,22 +10,23 @@ services:
       POSTGRES_DB: tasks_bd
     ports:
       - "15432:5432"
-  # backend:
-  #   image: api-tasks:latest
-  #   command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-  #   volumes:
-  #     - ./core:/app
-  #   ports:
-  #     - "8000:8000"
-  #   depends_on:
-  #     - db
-  #   environment:
-  #     - DB_HOST=localhost
-  #     - DB_PORT=5432
-  #     - DB_NAME=tasks_bd
-  #     - DB_USER=postgres
-  #     - DB_PASSWORD=postgres
-  #     - OPENAI_API_KEY=langchainapikey
+  backend:
+    image: api-tasks:latest
+    command: sh -c "sleep 15 && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=localhost
+      - DB_PORT=5432
+      - DB_NAME=tasks_bd
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - OPENAI_API_KEY=langchainapikey
   # frontend:
   #   build: ./frontend
   #   container_name: react_frontend
