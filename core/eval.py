@@ -8,7 +8,7 @@ Goal:
 Usage:
   From the project root (directory that contains ``manage.py``):
 
-  python -m core.eval
+pyt  python -m core.eval
   python core/eval.py
 """
 
@@ -121,7 +121,23 @@ class _StubLLM:
     """
     Deterministic stub for the LLM used by core.agent._get_llm().
     It detects which tool prompt is being used and returns valid JSON.
+
+    ``create_tool_calling_agent`` / ``build_agent`` require ``bind_tools`` on the
+    chat model; the real ``ChatOpenAI`` implements it. This stub adds a minimal
+    implementation so the agent graph can be built in eval without a live API.
     """
+
+    def bind_tools(self, tools, **kwargs):  # noqa: ANN001, D401
+        """Return self; eval only checks that ``build_agent()`` constructs."""
+        return self
+
+    def __call__(self, *args, **kwargs):  # noqa: ANN001
+        """
+        Make the stub acceptable to LangChain codepaths that accept a callable.
+        We route calls to ``invoke`` using the first positional arg as the prompt.
+        """
+        prompt = args[0] if args else kwargs.get("prompt", "")
+        return self.invoke(prompt)
 
     def invoke(self, prompt: str) -> _StubLLMResponse:  # noqa: D401
         if "break a task into small actionable subtasks" in prompt:

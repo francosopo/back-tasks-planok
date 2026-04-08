@@ -147,18 +147,48 @@ def classify_task(task_id: int) -> Dict[str, Any]:
     return data
 
 
+def _load_tool_calling_agent_stack():
+    """
+    LangChain v1+ moved AgentExecutor / create_tool_calling_agent to
+    ``langchain_classic``. Older releases expose them under ``langchain.agents``.
+    """
+    try:
+        from langchain.agents import AgentExecutor, create_tool_calling_agent  # type: ignore
+
+        return AgentExecutor, create_tool_calling_agent
+    except ImportError:
+        pass
+    try:
+        from langchain_classic.agents import (  # type: ignore
+            AgentExecutor,
+            create_tool_calling_agent,
+        )
+
+        return AgentExecutor, create_tool_calling_agent
+    except ImportError as e:
+        raise RuntimeError(
+            "Could not import AgentExecutor / create_tool_calling_agent. "
+            "Install `langchain-classic` (LangChain v1+) or use LangChain 0.x "
+            "where these live in `langchain.agents`."
+        ) from e
+
+
 def build_agent():
     """
     Returns an AgentExecutor wired with the tools in this module.
     """
     try:
-        from langchain.agents import AgentExecutor, create_tool_calling_agent  # type: ignore
-        from langchain_core.prompts import ChatPromptTemplate  # type: ignore
+        from langchain_core.prompts import (  # type: ignore
+            ChatPromptTemplate,
+            MessagesPlaceholder,
+        )
         from langchain_core.tools import tool  # type: ignore
     except Exception as e:  # pragma: no cover
         raise RuntimeError(
-            "Missing LangChain core packages. Install `langchain`."
+            "Missing langchain-core. Install `langchain` or `langchain-core`."
         ) from e
+
+    AgentExecutor, create_tool_calling_agent = _load_tool_calling_agent_stack()
 
     llm = _get_llm()
 
@@ -183,6 +213,8 @@ def build_agent():
                 "Be concise and return structured outputs from tools as-is.",
             ),
             ("human", "{input}"),
+            # Required by create_tool_calling_agent / AgentExecutor for tool round-trips.
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
     )
 
