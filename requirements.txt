@@ -3,6 +3,7 @@ Django==6.0.4
 djangorestframework==3.17.1
 sqlparse==0.5.5
 psycopg2-binary==2.9.9
-dotenv
+python-dotenv
 langchain
 langchain-classic
+langchain-openai

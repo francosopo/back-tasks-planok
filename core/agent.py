@@ -33,9 +33,10 @@ def _get_llm():
     """
     try:
         from langchain_openai import ChatOpenAI  # type: ignore
-    except Exception as e:  # pragma: no cover
+    except ImportError as e:  # pragma: no cover
         raise RuntimeError(
-            "Missing LangChain OpenAI integration. Install `langchain-openai`."
+            "Missing LangChain OpenAI integration. Install dependencies: "
+            "pip install langchain-openai"
         ) from e
 
     # Accept a few common env var names to reduce friction.
