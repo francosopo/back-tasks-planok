@@ -1,8 +1,5 @@
-from django.test import TestCase
+from unittest.mock import patch
 
-# Create your tests here.
-
-from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from .models import Task
@@ -43,8 +40,19 @@ class TaskAPITests(APITestCase):
         self.assertEqual(resp2.status_code, status.HTTP_200_OK)
         self.assertEqual(resp2.data['title'], "Tarea 2")
 
-    def test_create_task(self):
-        """Valida el POST en /tasks/"""
+    @patch("core.views.classify_task")
+    @patch("core.views.split_task")
+    def test_create_task(self, mock_split, mock_classify):
+        """POST /tasks/ crea la tarea y sub-tareas; el LLM está mockeado."""
+        mock_split.return_value = {
+            "subtasks": [
+                {"title": "Sub 1", "description": "Desc 1"},
+            ]
+        }
+        mock_classify.return_value = {
+            "priority": "medium",
+            "reason": "test stub",
+        }
         data = {
             "title": "Nueva Tarea",
             "description": "Prueba de creación",
@@ -52,7 +60,8 @@ class TaskAPITests(APITestCase):
         }
         response = self.client.post(self.url_list, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Task.objects.count(), 3)
+        # main task + 1 subtask from mocked split_task
+        self.assertEqual(Task.objects.count(), 4)
 
     def test_update_task(self):
         """Valida el PUT en /tasks/<id>/"""
