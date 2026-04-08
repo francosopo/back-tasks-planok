@@ -1,20 +1,41 @@
+version: "3.9"
+
 services:
 db:
   image: postgres:latest
+  container_name: postgres_db
   environment:
-    POSTGRES_USER: planok
-    POSTGRES_PASSWORD: planok
-    POSTGRES_DB: tasks
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_DB: tasks_bd
   ports:
     - "5432:5432"
 
-web:
-  build: .
-  command: python manage.py runserver
+backend:
+  build: ./core
+  container_name: django_backend
+  command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
   volumes:
-    - .:/app
+    - ./core:/app
   ports:
     - "8000:8000"
   depends_on:
-    - db 
+    - db
+  environment:
+    - DB_HOST=localhost
+    - DB_PORT=5432
+    - DB_NAME=tasks_bd
+    - DB_USER=postgres
+    - DB_PASSWORD=postgres
+    - OPENAI_API_KEY=langchainapikey
 
+frontend:
+  build: ./frontend
+  container_name: react_frontend
+  ports:
+    - "3000:3000"
+  volumes:
+    - ./frontend:/app
+  command: sh -c "npm install && npm start"
+  depends_on:
+    - backend
