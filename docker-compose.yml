@@ -1,0 +1,9 @@
+services:
+db:
+  image: postgres:latest
+  environment:
+    POSTGRES_USER: planok
+    POSTGRES_PASSWORD: planok
+    POSTGRES_DB: tasks
+  ports:
+    - "5432:5432"
